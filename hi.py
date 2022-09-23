@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, request
 from flask_slacksigauth import slack_sig_auth
 
 app = Flask(__name__)
@@ -10,8 +10,7 @@ app.config['SLACK_SIGNING_SECRET'] = None
 @app.route("/", methods=['POST'])
 @slack_sig_auth
 def hello_world():
-    name = os.environ.get("NAME", "World")
-    return "Hello {}!".format(name)
+    return repr(request.get_json())
 
 
 if __name__ == "__main__":
