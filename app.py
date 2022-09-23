@@ -216,7 +216,7 @@ def admin(channel, user, to_add):
     id = get_id(u)
     if not id:
       continue
-    if u not in val['admins']:
+    if id not in val['admins']:
       val['admins'].append(id)
   if doc.exists:
     doc.reference.update(val)
@@ -238,7 +238,7 @@ def unadmin(channel, user, to_remove):
     id = get_id(u)
     if not id:
       continue
-    if u in val['admins']:
+    if id in val['admins']:
       val['admins'].remove(id)
   if doc.exists:
     doc.reference.update(val)
