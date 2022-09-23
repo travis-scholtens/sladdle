@@ -69,8 +69,8 @@ def by_date(channel, date):
                    .where('play_on_date', '>=', str(datetime.date.today()))
                    .order_by('play_on_date')
                    .limit(1)).get()
-  if next_match.exists:
-    return next_match
+  for lineup in next_match:
+    return lineup
   return None
 
 def assigned_msg(modifier, c, current, date):
@@ -93,7 +93,7 @@ def court(channel, date, c, names):
         break
       if not current[i]:
         current[i] = names.pop()
-    lineup.set(val)
+    lineup.update(val)
     return assigned_msg('now', c, current, date)
   return assigned_msg('already', c, current, date)
 
