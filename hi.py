@@ -4,6 +4,7 @@ from flask import Flask
 from flask_slacksigauth import slack_sig_auth
 
 app = Flask(__name__)
+app.config['SLACK_SIGNING_SECRET'] = None
 
 
 @app.route("/", methods=['POST'])
