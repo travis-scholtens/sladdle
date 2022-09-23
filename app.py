@@ -2,7 +2,7 @@ import datetime
 from dateutil import parser
 import os
 
-from flask import Flask, request
+from flask import Flask, request, Response
 from flask_slacksigauth import slack_sig_auth
 import firebase_admin
 from firebase_admin import firestore
@@ -172,7 +172,9 @@ def display(channel, date):
       fields.append(field(content))
     if fields:
       blocks.append(section(f'*{t}:00*', fields))
-  return { 'text': text, 'blocks': blocks }
+  return Response(
+      json.dumps({ 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
+      mimetype='application/json')
 
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
