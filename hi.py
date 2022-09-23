@@ -16,6 +16,9 @@ app.config['SLACK_SIGNING_SECRET'] = None
 @app.route("/", methods=['POST'])
 @slack_sig_auth
 def hello_world():
+    db.collection(u'test').document(u'x').set({
+        u'test': unicode(request.form['text'])
+    })
     return 'hi <@travis.scholtens>'
 
 
