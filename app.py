@@ -155,7 +155,7 @@ def display(channel, date):
   val = lineup.to_dict()
   if not any(sum([ps for ps in val['courts'].values()], []):
     return show(channel, date)
-  text = f'Lineup for <#{channel}> for match on {val["play_on_date"]}
+  text = f'Lineup for <#{channel}> for match on {val["play_on_date"]}'
   display_date = f'{parser.parse(val["play_on_date"]):%B %d}'
   blocks = []
   blocks.append(section(f'*<#{channel}>* lineup for *{display_date}*'))
