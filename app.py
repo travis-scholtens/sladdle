@@ -23,6 +23,10 @@ def event():
     return request.json['challenge']
 
 
+def can_write(channel, user):
+  return True #db.collection('channels').document(channel).collection('lineups')
+
+
 def parse_date(d):
   try:
     int(d)
@@ -47,7 +51,9 @@ def parse_date(d):
 def lineups(channel):
   return db.collection('channels').document(channel).collection('lineups')
 
-def create(channel, date):
+def create(channel, user, date):
+  if not can_write(channel, user):
+    return f"<@{user}> can't do that"
   if not date:
     return 'Missing date'
         
@@ -58,7 +64,10 @@ def create(channel, date):
   return f'Started a new empty lineup for <#{channel}> on {date}'
 
 
-def delete(channel, date):
+def delete(channel, user, date):
+  if not can_write(channel, user):
+    return f"<@{user}> can't do that"
+
   if not date:
     return 'Missing date'
   
@@ -107,7 +116,7 @@ def assigned_msg(modifier, c, current, date):
   return f'{assigned} {modifier} playing on court {c} on {date}'
 
     
-def court(channel, date, c, names):
+def court(channel, user, date, c, names):
   lineup = by_date(channel, date)
   if not lineup:
     return 'There are no upcoming match lineups'
@@ -115,6 +124,8 @@ def court(channel, date, c, names):
   current = val['courts'][str(c)]
   if not names:
     return assigned_msg('currently', c, current, val['play_on_date'])
+  if not can_write(channel, user):
+    return f"<@{user}> can't do that"
   if len(names) <= len([n for n in current if not n]):
     names.reverse()
     for i in range(2):
@@ -127,6 +138,7 @@ def court(channel, date, c, names):
   elif len(names) == len([n for n in current if n]) == 2:
     for i in range(2):
       current[i] = names[i]
+    lineup.reference.update(val)
     return assigned_msg('now', c, current, val['play_on_date'])
   return assigned_msg('already', c, current, val['play_on_date'])
 
@@ -177,6 +189,11 @@ def display(channel, date):
       json.dumps({ 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
       mimetype='application/json')
 
+def admin(channel, user, to_add);
+  if not can_write(channel, user):
+    return f"<@{user}> can't do that"
+  return f'{user}!' + repr(to_add) + repr(request.form)
+
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
 def lineup():
@@ -191,13 +208,17 @@ def lineup():
     if not cmds:
       return(show(channel, date))
     if cmds == ['new']:
-      return create(channel, date)
+      return create(channel, request.form['user'], date)
     if cmds == ['delete']:
-      return delete(channel, date)
+      return delete(channel, request.form['user'], date)
     if cmds == ['view']:
       return display(channel, date)
+    if not date and cmds[0] == 'admin':
+      return admin(channel, request.form['user'], cmds[1:])
+    if not date and cmds[0] == 'unadmin':
+      return unadmin(channel, request.form['user'], cmds[1:])
     try:
-      return court(channel, date, int(cmds[0]), cmds[1:])
+      return court(channel, request.form['user'], date, int(cmds[0]), cmds[1:])
     except ValueError:
       return 'Expected a court number (1-6)'
 
