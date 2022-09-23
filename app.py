@@ -193,7 +193,7 @@ def display(channel, date):
     if fields:
       blocks.append(section(f'*{t}:00*', fields))
   return Response(
-      json.dumps({ 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
+      json.dumps({ 'response_type': 'in_channel', 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
       mimetype='application/json')
 
 id_pattern = re.compile('<@([^|]+)|.*>')
