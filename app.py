@@ -189,7 +189,7 @@ def display(channel, date):
       json.dumps({ 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
       mimetype='application/json')
 
-def admin(channel, user, to_add);
+def admin(channel, user, to_add):
   if not can_write(channel, user):
     return f"<@{user}> can't do that"
   return f'{user}!' + repr(to_add) + repr(request.form)
