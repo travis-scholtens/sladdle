@@ -2,6 +2,7 @@ import datetime
 from dateutil import parser
 import json
 import os
+import re
 
 from flask import Flask, request, Response
 from flask_slacksigauth import slack_sig_auth
@@ -24,7 +25,13 @@ def event():
 
 
 def can_write(channel, user):
-  return True #db.collection('channels').document(channel).collection('lineups')
+  doc = db.collection('channels').document(channel).get()
+  if not doc.exists:
+    return True
+  val = doc.to_dict()
+  if 'admins' not in val or not val['admins']:
+    return True
+  return user in val['admins']
 
 
 def parse_date(d):
@@ -189,10 +196,57 @@ def display(channel, date):
       json.dumps({ 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
       mimetype='application/json')
 
+id_pattern = re.compile('<@([^|]+)|.*>')
+def get_id(user):
+  m = id_pattern.match(user)
+  if not m:
+    return None
+  return m[1]
+
 def admin(channel, user, to_add):
   if not can_write(channel, user):
     return f"<@{user}> can't do that"
-  return f'{user}!' + repr(to_add) + repr(request.form)
+  doc = db.collection('channels').document(channel).get()
+  val = doc.to_dict() if doc.exists else {}
+  
+  if 'admins' not in val:
+    val['admins'] = []
+  
+  for u in to_add:
+    id = get_id(u)
+    if not id:
+      continue
+    if u not in val['admins']:
+      val['admins'].append(id)
+  if doc.exists:
+    doc.reference.update(val)
+  else:
+    doc.reference.set(val)
+  return ('No admins' if not val['admins']
+          else ', '.join([f'<@{a}>' for a in val['admins']]))
+
+def unadmin(channel, user, to_remove):
+  if not can_write(channel, user):
+    return f"<@{user}> can't do that"
+  doc = db.collection('channels').document(channel).get()
+  val = doc.to_dict() if doc.exists else {}
+  
+  if 'admins' not in val:
+    val['admins'] = []
+  
+  for u in to_remove:
+    id = get_id(u)
+    if not id:
+      continue
+    if u in val['admins']:
+      val['admins'].remove(id)
+  if doc.exists:
+    doc.reference.update(val)
+  else:
+    doc.reference.set(val)
+  return ('No admins' if not val['admins']
+          else ', '.join([f'<@{a}>' for a in val['admins']]))
+
 
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
@@ -208,18 +262,18 @@ def lineup():
     if not cmds:
       return(show(channel, date))
     if cmds == ['new']:
-      return create(channel, request.form['user'], date)
+      return create(channel, request.form['user_id'], date)
     if cmds == ['delete']:
-      return delete(channel, request.form['user'], date)
+      return delete(channel, request.form['user_id'], date)
     if cmds == ['view']:
       return display(channel, date)
     if not date and cmds[0] == 'admin':
       return repr(request.form)
-      #return admin(channel, request.form['user'], cmds[1:])
+      #return admin(channel, request.form['user_id'], cmds[1:])
     if not date and cmds[0] == 'unadmin':
-      return unadmin(channel, request.form['user'], cmds[1:])
+      return unadmin(channel, request.form['user_id'], cmds[1:])
     try:
-      return court(channel, request.form['user'], date, int(cmds[0]), cmds[1:])
+      return court(channel, request.form['user_id'], date, int(cmds[0]), cmds[1:])
     except ValueError:
       return 'Expected a court number (1-6)'
 
