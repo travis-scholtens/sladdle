@@ -130,6 +130,48 @@ def court(channel, date, c, names):
   return assigned_msg('already', c, current, val['play_on_date'])
 
 
+times = { 7: [2,6],
+          8: [1,4],
+          9: [3,5] }
+
+def md(text):
+  return { 'type': 'mrkdwn', 'text': text }
+
+def section(text, fields=None):
+  s = { 'type': 'section', 'text': md(text) }
+  if fields:
+    s['fields'] = fields
+  return s
+
+divider = { 'type': 'divider' }
+
+def field(text):
+  return md(text)
+
+def display(channel, date):
+  lineup = by_date(channel, date)
+  if not lineup:
+    return 'There are no upcoming match lineups'
+  val = lineup.to_dict()
+  if not any(sum([ps for ps in val['courts'].values()], []):
+    return show(channel, date)
+  text = f'Lineup for <#{channel}> for match on {val["play_on_date"]}
+  display_date = f'{parser.parse(val["play_on_date"]):%B %d}'
+  blocks = []
+  blocks.append(section(f'*<#{channel}>* lineup for *{display_date}*'))
+  blocks.append(divider)
+  for (t, cs) in times.items():
+    fields = []
+    for c in cs:
+      ps = val['courts'][str(c)]
+      if not any(ps):
+        continue
+      fields.append(field(f'`{c}:` {ps[0]}'))
+      fields.append(field(ps[1] or ' '))
+    if fields:
+      blocks.append(section(f'*{t}:00*', fields))
+  return { 'text': text, 'blocks': blocks }
+
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
 def lineup():
@@ -147,10 +189,13 @@ def lineup():
       return create(channel, date)
     if cmds == ['delete']:
       return delete(channel, date)
+    if cmds == ['view']:
+      return display(channel, date)
     try:
       return court(channel, date, int(cmds[0]), cmds[1:])
     except ValueError:
       return 'Expected a court number (1-6)'
+
 
 
 if __name__ == "__main__":
