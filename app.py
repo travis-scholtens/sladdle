@@ -56,6 +56,34 @@ def create(channel, date):
     })
   return f'Started a new empty lineup for <#{channel}> on {date}'
 
+
+def delete(channel, date):
+  if not date:
+    return 'Missing date'
+  
+  lineup = by_date(channel, date)
+  if not lineup:
+    return f'There is no lineup for a match on {date}'
+  lineup.reference.delete()
+  return f'Removed lineup for <#{channel}> on {date}'
+
+
+def show(channel, date):
+  lineup = by_date(channel, date)
+  if not lineup:
+    if date:
+      return f'There is no lineup for a match on {date}'
+    else:
+      return 'There are no upcoming match lineups'
+  val = lineup.to_dict()
+  prefix = f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
+  not_full = ', '.join([str(c) for c in range (1, 7) if not all(val['courts'][str(c)])])
+  if not_full:
+    return prefix + f'still needs players on: {not_full}'
+  else:
+    return prefix + 'has players on every court'
+
+
 def by_date(channel, date):
   if date:
     by_play = lineups(channel).where('play_on_date', '==', str(date)).get()
@@ -95,6 +123,10 @@ def court(channel, date, c, names):
         current[i] = names.pop()
     lineup.reference.update(val)
     return assigned_msg('now', c, current, val['play_on_date'])
+  elif len(names) == len([n for n in current if not n]) == 2:
+    for i in range(2):
+      current[i] = names[i]
+    return assigned_msg('now', c, current, val['play_on_date'])
   return assigned_msg('already', c, current, val['play_on_date'])
 
 
@@ -113,6 +145,8 @@ def lineup():
       return(show(channel, date))
     if cmds == ['new']:
       return create(channel, date)
+    if cmds == ['delete']:
+      return delete(channel, date)
     try:
       return court(channel, date, int(cmds[0]), cmds[1:])
     except ValueError:
