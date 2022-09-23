@@ -43,16 +43,60 @@ def parse_date(d):
   except parser.ParserError:
     return None
 
+def lineups(channel):
+  return db.collection('channels').document(channel).collection('lineups')
 
 def create(channel, date):
   if not date:
     return 'Missing date'
         
-  db.collection('channels').document(channel).collection('lineups').document(str(date)).set({
+  lineups(channel).document(str(date)).set({
         'play_on_date': str(date),
         'courts': { str(i): [None, None] for i in range(1, 7)}
     })
-  return f'New empty lineup for {channel} on {date}'
+  return f'Started a new empty lineup for <@{channel}> on {date}'
+
+def by_date(channel, date):
+  if date:
+    by_play = lineups(channel).where('play_on_date', '==', str(date)).get()
+    for lineup in by_play:
+      return lineup
+    by_id = lineups(channel).document(str(date)).get()
+    if by_id.exists:
+      return by_id
+    return None
+  next_match = (lineups
+                   .where('play_on_date', '>=', str(datetime.date().today()))
+                   .order_by('play_on_date')
+                   .limit(1)).get()
+  if next_match.exists:
+    return next_match
+  return None
+
+def assigned_msg(modifier, current, date):
+  assigned = ' and '.join([n for n in current if n]) or 'Nobody'
+  return f'{assigned} {modifier} playing on court {c} on {date}'
+
+    
+def court(channel, date, c, names):
+  lineup = by_date(channel, date)
+  if not lineup:
+    return 'There are no upcoming match lineups'
+  val = lineup.to_dict()
+  current = val[str(c)]
+  if not names:
+    return assigned_msg('currently', current, date)
+  if len(names) <= len([n for n in current if not n]):
+    names.reverse()
+    for i in range(2):
+      if not names:
+        break
+      if not current[i]:
+        current[i] = names.pop()
+    lineup.set(val)
+    return assigned_msg('now', current, date)
+  return assigned_msg('already', current, date)
+
 
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
@@ -72,7 +116,7 @@ def lineup():
     try:
       return court(channel, date, int(cmds[0]), cmds[1:])
     except ValueError:
-      return 'Expected court number (1-6)'
+      return 'Expected a court number (1-6)'
 
 
 if __name__ == "__main__":
