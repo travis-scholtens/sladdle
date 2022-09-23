@@ -2,6 +2,12 @@ import os
 
 from flask import Flask, request
 from flask_slacksigauth import slack_sig_auth
+import firebase_admin
+from firebase_admin import firestore
+
+# Application Default credentials are automatically created.
+app = firebase_admin.initialize_app()
+db = firestore.client()
 
 app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
