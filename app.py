@@ -13,6 +13,13 @@ app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
 
+@app.route("/event", methods=['POST'])
+@slack_sig_auth
+def event():
+  if request.json and 'challenge' in request.json:
+    return request.json['challenge']
+
+
 @app.route("/lineup", methods=['POST'])
 @slack_sig_auth
 def lineup():
