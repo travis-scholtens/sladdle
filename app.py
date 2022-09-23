@@ -65,7 +65,7 @@ def by_date(channel, date):
     if by_id.exists:
       return by_id
     return None
-  next_match = (lineups
+  next_match = (lineups(channel)
                    .where('play_on_date', '>=', str(datetime.date().today()))
                    .order_by('play_on_date')
                    .limit(1)).get()
@@ -83,7 +83,7 @@ def court(channel, date, c, names):
   if not lineup:
     return 'There are no upcoming match lineups'
   val = lineup.to_dict()
-  current = val[str(c)]
+  current = val['courts'][str(c)]
   if not names:
     return assigned_msg('currently', current, date)
   if len(names) <= len([n for n in current if not n]):
