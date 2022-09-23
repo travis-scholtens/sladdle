@@ -85,7 +85,7 @@ def court(channel, date, c, names):
   val = lineup.to_dict()
   current = val['courts'][str(c)]
   if not names:
-    return assigned_msg('currently', c, current, date)
+    return assigned_msg('currently', c, current, val['play_on_date'])
   if len(names) <= len([n for n in current if not n]):
     names.reverse()
     for i in range(2):
@@ -93,9 +93,9 @@ def court(channel, date, c, names):
         break
       if not current[i]:
         current[i] = names.pop()
-    lineup.update(val)
-    return assigned_msg('now', c, current, date)
-  return assigned_msg('already', c, current, date)
+    lineup.reference.update(val)
+    return assigned_msg('now', c, current, val['play_on_date'])
+  return assigned_msg('already', c, current, val['play_on_date'])
 
 
 @app.route("/lineup", methods=['POST'])
