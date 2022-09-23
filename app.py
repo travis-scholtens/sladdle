@@ -50,7 +50,7 @@ def create(channel, date):
         
   db.collection('lineups').collection(channel).document(str(date)).set({
         'play_on_date': str(date),
-        'courts' = { i: (None, None) for i in range(1, 7)}
+        'courts': { i: (None, None) for i in range(1, 7)}
     })
   return f'New empty lineup for {channel} on {date}'
 
