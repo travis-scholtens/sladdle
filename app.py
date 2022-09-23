@@ -168,7 +168,7 @@ def display(channel, date):
         continue
       content = f'{c}: {ps[0]}'
       if ps[1]:
-        content += f'\\n     {ps[1]}'
+        content += f'\n     {ps[1]}'
       fields.append(field(content))
     if fields:
       blocks.append(section(f'*{t}:00*', fields))
