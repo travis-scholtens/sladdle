@@ -268,8 +268,7 @@ def lineup():
     if cmds == ['view']:
       return display(channel, date)
     if not date and cmds[0] == 'admin':
-      return repr(request.form)
-      #return admin(channel, request.form['user_id'], cmds[1:])
+      return admin(channel, request.form['user_id'], cmds[1:])
     if not date and cmds[0] == 'unadmin':
       return unadmin(channel, request.form['user_id'], cmds[1:])
     try:
