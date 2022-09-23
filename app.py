@@ -54,7 +54,7 @@ def create(channel, date):
         'play_on_date': str(date),
         'courts': { str(i): [None, None] for i in range(1, 7)}
     })
-  return f'Started a new empty lineup for <@{channel}> on {date}'
+  return f'Started a new empty lineup for <#{channel}> on {date}'
 
 def by_date(channel, date):
   if date:
