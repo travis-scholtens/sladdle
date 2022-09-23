@@ -66,14 +66,14 @@ def by_date(channel, date):
       return by_id
     return None
   next_match = (lineups(channel)
-                   .where('play_on_date', '>=', str(datetime.date().today()))
+                   .where('play_on_date', '>=', str(datetime.date.today()))
                    .order_by('play_on_date')
                    .limit(1)).get()
   if next_match.exists:
     return next_match
   return None
 
-def assigned_msg(modifier, current, date):
+def assigned_msg(modifier, c, current, date):
   assigned = ' and '.join([n for n in current if n]) or 'Nobody'
   return f'{assigned} {modifier} playing on court {c} on {date}'
 
@@ -85,7 +85,7 @@ def court(channel, date, c, names):
   val = lineup.to_dict()
   current = val['courts'][str(c)]
   if not names:
-    return assigned_msg('currently', current, date)
+    return assigned_msg('currently', c, current, date)
   if len(names) <= len([n for n in current if not n]):
     names.reverse()
     for i in range(2):
@@ -94,8 +94,8 @@ def court(channel, date, c, names):
       if not current[i]:
         current[i] = names.pop()
     lineup.set(val)
-    return assigned_msg('now', current, date)
-  return assigned_msg('already', current, date)
+    return assigned_msg('now', c, current, date)
+  return assigned_msg('already', c, current, date)
 
 
 @app.route("/lineup", methods=['POST'])
