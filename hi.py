@@ -10,7 +10,7 @@ app.config['SLACK_SIGNING_SECRET'] = None
 @app.route("/", methods=['POST'])
 @slack_sig_auth
 def hello_world():
-    return repr(request.form)
+    return 'hi <@travis.scholtens>'
 
 
 if __name__ == "__main__":
