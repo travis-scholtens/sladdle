@@ -13,9 +13,9 @@ app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
 
-@app.route("/", methods=['POST'])
+@app.route("/lineup", methods=['POST'])
 @slack_sig_auth
-def hello_world():
+def lineup():
     db.collection(u'test').document(u'x').set({
         u'test': request.form['text']
     })
