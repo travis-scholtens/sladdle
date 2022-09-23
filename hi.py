@@ -1,11 +1,13 @@
 import os
 
 from flask import Flask
+from flask_slacksigauth import slack_sig_auth
 
 app = Flask(__name__)
 
 
 @app.route("/", methods=['POST'])
+@slack_sig_auth
 def hello_world():
     name = os.environ.get("NAME", "World")
     return "Hello {}!".format(name)
