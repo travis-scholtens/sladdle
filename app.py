@@ -1,5 +1,5 @@
 import datetime
-import dateutil
+from dateutil import parser
 import os
 
 from flask import Flask, request
@@ -36,11 +36,11 @@ def parse_date(d):
   if d == 'tomorrow':
     return datetime.date.today() + datetime.timedelta(days=1)
   try:
-    date = dateutil.parser.parse(d).date()
+    date = parser.parse(d).date()
     if date.month <= 6 and date.year == datetime.date.today().year:
       return date + datetime.timedelta(years=1)
     return date
-  except dateutil.parser.ParserError:
+  except parser.ParserError:
     return None
 
 
