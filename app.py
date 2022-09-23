@@ -166,8 +166,10 @@ def display(channel, date):
       ps = val['courts'][str(c)]
       if not any(ps):
         continue
-      fields.append(field(f'`{c}:` {ps[0]}'))
-      fields.append(field(ps[1] or ' '))
+      content = f'{c}: {ps[0]}'
+      if ps[1]:
+        content += f'\\n     {ps[1]}'
+      fields.append(field(content))
     if fields:
       blocks.append(section(f'*{t}:00*', fields))
   return { 'text': text, 'blocks': blocks }
