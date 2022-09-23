@@ -123,7 +123,7 @@ def court(channel, date, c, names):
         current[i] = names.pop()
     lineup.reference.update(val)
     return assigned_msg('now', c, current, val['play_on_date'])
-  elif len(names) == len([n for n in current if not n]) == 2:
+  elif len(names) == len([n for n in current if n]) == 2:
     for i in range(2):
       current[i] = names[i]
     return assigned_msg('now', c, current, val['play_on_date'])
