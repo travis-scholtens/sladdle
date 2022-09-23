@@ -48,7 +48,7 @@ def create(channel, date):
   if not date:
     return 'Missing date'
         
-  db.collection('lineups').collection(channel).document(str(date)).set({
+  db.collection('channels').document('channel').collection('lineups').document(str(date)).set({
         'play_on_date': str(date),
         'courts': { i: (None, None) for i in range(1, 7)}
     })
