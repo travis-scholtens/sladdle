@@ -27,7 +27,7 @@ def event():
 @slack_sig_auth
 def pti():
   ratings = (db.collection('rankings')
-       .document(cache_name)
+       .document('lipta')
        .collection('divisions')
        .document('d7')
        .collection('teams')
