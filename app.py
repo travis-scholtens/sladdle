@@ -22,6 +22,7 @@ app.config['SLACK_SIGNING_SECRET'] = None
 def event():
   if request.json and 'challenge' in request.json:
     return request.json['challenge']
+  return ''
 
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
