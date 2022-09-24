@@ -34,7 +34,10 @@ def pti():
        .document('pwyc')).get()
   if not ratings.exists:
     return "Couldn't find ratings"
-  return '\\n'.join([f'{name}, {pti or "-"}' for (name, pti) in ratings.to_dict()['pti'].items()])
+  return '\n'.join([f'{name}, {pti or "-"}'
+                    for (name, pti) in sorted(
+                        ratings.to_dict()['pti'].items(),
+                        key=lambda np: np[1] or 100)])
 
 
 def can_write(channel, user):
