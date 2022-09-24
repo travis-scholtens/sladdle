@@ -23,6 +23,19 @@ def event():
   if request.json and 'challenge' in request.json:
     return request.json['challenge']
 
+@app.route("/pti", methods=['POST'])
+@slack_sig_auth
+def pti():
+  ratings = (db.collection('rankings')
+       .document(cache_name)
+       .collection('divisions')
+       .document('d7')
+       .collection('teams')
+       .document('pwyc')).get()
+  if not ratings.exists:
+    return "Couldn't find ratings"
+  return '\\n'.join([f'{name}, {pti or "-"}' for (name, pti) in ratings.to_dict().items()])
+
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
