@@ -51,13 +51,13 @@ def ranking(division, team, rank_type, reverse):
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
 def pti():
-  return ranking('d7', 'pwyc', 'pti', True)
+  return ranking('d7', 'pwyc', 'pti', False)
 
 
 @app.route("/rank", methods=['POST'])
 @slack_sig_auth
 def rank():
-  return ranking('d7', 'pwyc', 'skill', False)
+  return ranking('d7', 'pwyc', 'skill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
