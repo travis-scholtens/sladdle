@@ -50,7 +50,7 @@ def pti():
   return ranking('d7', 'pwyc', 'pti')
 
 
-@app.route("/pti", methods=['POST'])
+@app.route("/rank", methods=['POST'])
 @slack_sig_auth
 def rank():
   return ranking('d7', 'pwyc', 'skill')
