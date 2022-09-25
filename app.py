@@ -41,11 +41,12 @@ def ranking(division, team, rank_type, reverse):
     return "Couldn't find ratings"
   ids = db.document('slack/names').get().to_dict() or {}
   ids = ids['ids'] if ids else ids
+  pairs = ratings.to_dict()[rank_type].items()
   return '\n'.join([f'{try_id(name, ids)}, {try_num(pti)}'
                     for (name, pti) in sorted(
-                        ratings.to_dict()[rank_type].items(),
+                        [pair for pair in pairs if pair[1]],
                         key=lambda np: np[1] or 100,
-                        reverse=reverse)])
+                        reverse=reverse) + [pair for pair in pairs if not pair[1]]])
 
 
 @app.route("/pti", methods=['POST'])
