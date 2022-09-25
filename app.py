@@ -24,6 +24,9 @@ def event():
     return request.json['challenge']
   return ''
 
+def try_id(name, ids):
+  return f'<@{ids[name]}' if name in ids else name
+
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
 def pti():
@@ -35,7 +38,8 @@ def pti():
        .document('pwyc')).get()
   if not ratings.exists:
     return "Couldn't find ratings"
-  return '\n'.join([f'{name}, {pti or "-"}'
+  ids = db.document('slack/names').get().to_dict() or {}
+  return '\n'.join([f'{try_id(name, ids)}, {pti or "-"}'
                     for (name, pti) in sorted(
                         ratings.to_dict()['pti'].items(),
                         key=lambda np: np[1] or 100)])
