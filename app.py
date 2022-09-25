@@ -27,24 +27,33 @@ def event():
 def try_id(name, ids):
   return f'<@{ids[name]}>' if name in ids else name
 
-@app.route("/pti", methods=['POST'])
-@slack_sig_auth
-def pti():
+def ranking(division, team, rank_type):
   ratings = (db.collection('rankings')
        .document('lipta')
        .collection('divisions')
-       .document('d7')
+       .document(division)
        .collection('teams')
-       .document('pwyc')).get()
+       .document(team)).get()
   if not ratings.exists:
     return "Couldn't find ratings"
   ids = db.document('slack/names').get().to_dict() or {}
   ids = ids['ids'] if ids else ids
   return '\n'.join([f'{try_id(name, ids)}, {pti or "-"}'
                     for (name, pti) in sorted(
-                        ratings.to_dict()['pti'].items(),
+                        ratings.to_dict()[rank_type].items(),
                         key=lambda np: np[1] or 100)])
 
+
+@app.route("/pti", methods=['POST'])
+@slack_sig_auth
+def pti():
+  return('d7', 'pwyc', 'pti')
+
+
+@app.route("/pti", methods=['POST'])
+@slack_sig_auth
+def rank():
+  return('d7', 'pwyc', 'skill')
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
