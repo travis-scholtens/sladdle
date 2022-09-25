@@ -25,7 +25,7 @@ def event():
   return ''
 
 def try_id(name, ids):
-  return f'<@{ids[name]}' if name in ids else name
+  return f'<@{ids[name]}>' if name in ids else name
 
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
