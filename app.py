@@ -39,6 +39,7 @@ def pti():
   if not ratings.exists:
     return "Couldn't find ratings"
   ids = db.document('slack/names').get().to_dict() or {}
+  ids = ids['ids'] if ids else ids
   return '\n'.join([f'{try_id(name, ids)}, {pti or "-"}'
                     for (name, pti) in sorted(
                         ratings.to_dict()['pti'].items(),
