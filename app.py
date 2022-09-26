@@ -53,7 +53,7 @@ def ranking(division, team, rank_type, reverse):
 @slack_sig_auth
 def pti():
   division = request.form['text'].split()[0] if request.form['text'] else 'd7'
-  team = request.form['text'].split()[0] if request.form['text'] else 'pwyc'
+  team = request.form['text'].split()[-1] if request.form['text'] else 'pwyc'
   if team == division:
     division = 'd7'
   return ranking(division, team, 'pti', False)
@@ -63,7 +63,7 @@ def pti():
 @slack_sig_auth
 def rank():
   division = request.form['text'].split()[0] if request.form['text'] else 'd7'
-  team = request.form['text'].split()[0] if request.form['text'] else 'pwyc'
+  team = request.form['text'].split()[-1] if request.form['text'] else 'pwyc'
   if team == division:
     division = 'd7'
   return ranking(division, team, 'skill', True)
