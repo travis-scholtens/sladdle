@@ -31,6 +31,13 @@ def try_num(f):
   return f'{f:.1f}' if f else '-'
 
 def ranking(division, team, rank_type, reverse):
+  if team = 'teams':
+    return '\n'.join(sorted(t.id for t in 
+                     db.collection('rankings')
+                       .document('lipta')
+                       .collection('divisions')
+                       .document(division)
+                       .collection('teams').stream()))
   ratings = (db.collection('rankings')
        .document('lipta')
        .collection('divisions')
