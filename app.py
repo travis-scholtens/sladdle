@@ -32,8 +32,9 @@ def try_num(f):
 
 def ranking(division, team, rank_type, reverse):
   if team == 'teams':
-    return '\n'.join(sorted(t.id for t in 
-                     db.collection('rankings')
+    return '\n'.join(sorted(
+        f'{t.id}: {t.to_dict()["name"]}'
+        for t in  db.collection('rankings')
                        .document('lipta')
                        .collection('divisions')
                        .document(division)
