@@ -31,8 +31,6 @@ def try_num(f):
   return f'{f:.1f}' if f else '-'
 
 def ranking(division, team, rank_type, reverse):
-
-
   ratings = (db.collection('rankings')
        .document('lipta')
        .collection('divisions')
@@ -54,13 +52,21 @@ def ranking(division, team, rank_type, reverse):
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
 def pti():
-  return ranking('d7', request.form['text'] or 'pwyc', 'pti', False)
+  division = request.form['text'].split()[0] if request.form['text'] else 'd7'
+  team = request.form['text'].split()[0] if request.form['text'] else 'pwyc'
+  if team == division:
+    division = 'd7'
+  return ranking(division, team, 'pti', False)
 
 
 @app.route("/rank", methods=['POST'])
 @slack_sig_auth
 def rank():
-  return ranking('d7', request.form['text'] or 'pwyc', 'skill', True)
+  division = request.form['text'].split()[0] if request.form['text'] else 'd7'
+  team = request.form['text'].split()[0] if request.form['text'] else 'pwyc'
+  if team == division:
+    division = 'd7'
+  return ranking(division, team, 'skill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
