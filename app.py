@@ -33,7 +33,7 @@ def get_rankings(division, team, rank_type):
        .document(team)).get()
   if not ratings.exists:
     return None
-  return ratings.to_dict()[rank_type].items()
+  return list(ratings.to_dict()[rank_type].items())
 
 def try_bold(name, home):
   return '*' if name in home else ''
