@@ -24,13 +24,27 @@ def event():
     return request.json['challenge']
   return ''
 
+def get_rankings(division, team, rank_type):
+  ratings = (db.collection('rankings')
+       .document('lipta')
+       .collection('divisions')
+       .document(division)
+       .collection('teams')
+       .document(team)).get()
+  if not ratings.exists:
+    return None
+  return ratings.to_dict()[rank_type].items()
+
+def try_bold(name, home):
+  return '*' if name in home else ''
+
 def try_id(name, ids):
   return f'<@{ids[name]}>' if name in ids else name
 
 def try_num(f):
   return f'{f:.1f}' if f else '-'
 
-def ranking(division, team, rank_type, reverse):
+def ranking(division, team, other, rank_type, reverse):
   if team == 'teams':
     return '\n'.join(sorted(
         f'{t.id}: {t.to_dict()["name"]}'
@@ -39,18 +53,20 @@ def ranking(division, team, rank_type, reverse):
                        .collection('divisions')
                        .document(division)
                        .collection('teams').stream()))
-  ratings = (db.collection('rankings')
-       .document('lipta')
-       .collection('divisions')
-       .document(division)
-       .collection('teams')
-       .document(team)).get()
-  if not ratings.exists:
-    return "Couldn't find ratings"
+  pairs = get_rankings(division, team, rank_type)
+  if not pairs:
+    return "Couldn't find ratings for {team}"
+  if other:
+    home = {name for (name, _) in pairs}
+    others = get_rankings(division, other, rank_type)
+    if not others:
+      return "Couldn't find ratings for {other}"
+    pairs += others
+  else:
+    home = set()
   ids = db.document('slack/names').get().to_dict() or {}
   ids = ids['ids'] if ids else ids
-  pairs = ratings.to_dict()[rank_type].items()
-  return '\n'.join([f'{try_id(name, ids)}, {try_num(pti)}'
+  return '\n'.join([f'{try_bold(name, home)}{try_id(name, ids)}, {try_num(pti)}{try_bold(name, home)}'
                     for (name, pti) in sorted(
                         [pair for pair in pairs if pair[1]],
                         key=lambda np: np[1] or 100,
@@ -60,21 +76,31 @@ def ranking(division, team, rank_type, reverse):
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
 def pti():
-  division = request.form['text'].split()[0] if request.form['text'] else 'd7'
-  team = request.form['text'].split()[-1] if request.form['text'] else 'pwyc'
+  parts = request.form['text'].split()
+  other = None
+  if len(parts) > 1 and parts[-2] == 'vs':
+    other = parts.pop()
+    parts.pop()
+  division = parts[0] if parts else 'd7'
+  team = parts[-1] if parts else 'pwyc'
   if team == division:
     division = 'd7'
-  return ranking(division, team, 'pti', False)
+  return ranking(division, team, other, 'pti', False)
 
 
 @app.route("/rank", methods=['POST'])
 @slack_sig_auth
 def rank():
-  division = request.form['text'].split()[0] if request.form['text'] else 'd7'
-  team = request.form['text'].split()[-1] if request.form['text'] else 'pwyc'
+  parts = request.form['text'].split()
+  other = None
+  if len(parts) > 1 and parts[-2] == 'vs':
+    other = parts.pop()
+    parts.pop()
+  division = parts[0] if parts else 'd7'
+  team = parts[-1] if parts else 'pwyc'
   if team == division:
     division = 'd7'
-  return ranking(division, team, 'skill', True)
+  return ranking(division, team, other, 'skill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
@@ -145,12 +171,12 @@ def show(channel, date):
     else:
       return 'There are no upcoming match lineups'
   val = lineup.to_dict()
-  prefix = f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
   not_full = ', '.join([str(c) for c in range (1, 7) if not all(val['courts'][str(c)])])
   if not_full:
-    return prefix + f'still needs players on: {not_full}'
+    return (f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
+          + f'still needs players on: {not_full}')
   else:
-    return prefix + 'has players on every court'
+    return display(channel, date, False)
 
 
 def by_date(channel, date):
@@ -220,7 +246,7 @@ divider = { 'type': 'divider' }
 def field(text):
   return md(text)
 
-def display(channel, date):
+def display(channel, date, in_channel=True):
   lineup = by_date(channel, date)
   if not lineup:
     return 'There are no upcoming match lineups'
@@ -245,7 +271,9 @@ def display(channel, date):
     if fields:
       blocks.append(section(f'*{t}:00*', fields))
   return Response(
-      json.dumps({ 'response_type': 'in_channel', 'text': text, 'blocks': blocks }).replace('\\n', '\n'),
+      json.dumps({ 'response_type': 'in_channel' if in_channel else 'ephemeral', 
+                   'text': text,
+                   'blocks': blocks }).replace('\\n', '\n'),
       mimetype='application/json')
 
 id_pattern = re.compile('<@([^|]+)|.*>')
