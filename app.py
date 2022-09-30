@@ -136,7 +136,7 @@ def rank():
   team = parts[-1] if parts else 'pwyc'
   if team == division:
     division = 'd7'
-  return ranking(division, team, other, 'tskill', True)
+  return ranking(division, team, other, 'divtskill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
