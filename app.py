@@ -47,7 +47,7 @@ def sort_ranked(name_rating_pairs, reverse):
       [(name, rating)
        for (name, rating) in name_rating_pairs
        if rating is not None],
-      key=lambda name_rating: name_rating[1],
+      key=lambda name_rating: (name_rating[1], name_rating[0]),
       reverse=reverse)
 
 def sort_unranked(name_rating_pairs):
