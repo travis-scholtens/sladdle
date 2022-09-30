@@ -33,7 +33,42 @@ def get_rankings(division, team, rank_type):
        .document(team)).get()
   if not ratings.exists:
     return None
-  return list(ratings.to_dict()[rank_type].items())
+  data = ratings.to_dict()
+  timestamp = f'previous_{rank_type}_time'
+  previous = []
+  if (timestamp in data and 
+      datetime.datetime.now() - datetime.datetime.fromtimestamp(data[timestamp]/1000)
+      < datetime.timedelta(days=5)):
+    previous = list(data[f'previous_{rank_type}'].items())
+  return (list(data[rank_type].items()), previous)
+
+def sort_ranked(name_rating_pairs, reverse):
+  return sorted(
+      [(name, rating)
+       for (name, rating) in name_rating_pairs
+       if rating is not None],
+      key=lambda name_rating: name_rating[1],
+      reverse=reverse)
+
+def sort_unranked(name_rating_pairs):
+  return sorted(
+      [(name, rating)
+       for (name, rating) in name_rating_pairs
+       if rating is None],
+      key=lambda name_rating: name_rating[0])
+
+def get_movements(current, previous, reverse):
+  current_names = [name for (name, _) in sort_ranked(current, reverse)]
+  previous_names = [name for (name, _) in sort_ranked(previous, reverse)]
+  common = set(current_names) & set(previous_names)
+  current_names = [name for name in current_names if name in common]
+  previous_names = [name for name in previous_names if name in common]
+  current_ranks = {current_names[i]: i for i in range(len(current_names))}
+  previous_ranks = {previous_names[i]: i for i in range(len(previous_names))}
+  return {
+      name: '↑' if current_ranks[name] < previous_ranks[name] else '↓'
+      for name in common
+      if current_ranks[name] != previous_ranks[name]}
 
 def try_bold(name, home):
   return '*' if name in home else ''
@@ -53,7 +88,7 @@ def ranking(division, team, other, rank_type, reverse):
                        .collection('divisions')
                        .document(division)
                        .collection('teams').stream()))
-  pairs = get_rankings(division, team, rank_type)
+  (pairs, previous) = get_rankings(division, team, rank_type)
   if not pairs:
     return "Couldn't find ratings for {team}"
   if other:
@@ -62,16 +97,17 @@ def ranking(division, team, other, rank_type, reverse):
     if not others:
       return "Couldn't find ratings for {other}"
     pairs += others
+    previous = []
   else:
     home = set()
+  movement = get_movements(pairs, previous, reverse)
   ids = db.document('slack/names').get().to_dict() or {}
   ids = ids['ids'] if ids else ids
-  return '\n'.join([f'{try_bold(name, home)}{try_id(name, ids)}, {try_num(pti)}{try_bold(name, home)}'
-                    for (name, pti) in sorted(
-                        [pair for pair in pairs if pair[1]],
-                        key=lambda np: np[1] or 100,
-                        reverse=reverse) + [pair for pair in pairs if not pair[1]]])
-
+  return '\n'.join([
+      f'{try_bold(name, home)}{movement.get(name, "·")} {try_id(name, ids)}, {try_num(pti)}{try_bold(name, home)}'
+      for (name, pti) in
+          sort_ranked(pairs, reverse) +
+          sort_unranked(pairs)])
 
 @app.route("/pti", methods=['POST'])
 @slack_sig_auth
