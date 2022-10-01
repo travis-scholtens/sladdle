@@ -392,7 +392,22 @@ def lineup():
     except ValueError:
       return 'Expected a court number (1-6)'
 
-
+@app.route("/available", methods=['POST'])
+@slack_sig_auth
+def available():
+    channel = request.form['channel_id']
+    user = request.form['user_id']
+    ts = request.form['text'].split()
+    date = None
+    (maybe_date, cmds) = (ts[0] if ts else None, ts[1:])
+    if maybe_date:
+      date = parse_date(maybe_date)
+      if not date:
+        cmds.insert(0, maybe_date)
+    if not cmds:
+      cmds.append('789')
+    if cmds[0] == 'who' and can_write(channel, user):
+      return availability(channel, date)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
