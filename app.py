@@ -392,6 +392,15 @@ def lineup():
     except ValueError:
       return 'Expected a court number (1-6)'
 
+def create_availability():
+  pass
+
+def mark_availability():
+  pass
+
+def availability():
+  pass
+
 @app.route("/available", methods=['POST'])
 @slack_sig_auth
 def available():
@@ -422,6 +431,7 @@ def available():
       return mark_availability(channel, date, target_user, [])
     if cmds[0] in ('vs', '@') and can_write(channel, user):
       return create_availability(channel, date, cmds)
+    return mark_availability(channel, date, target_user, ''.join(cmds).split(''))
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
