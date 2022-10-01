@@ -416,10 +416,12 @@ def available():
 
     if not cmds:
       cmds.append('789')
-    if cmds[0] == 'who':
-      return availability(channel, date, user)
-    if cmds[0] == 'no':
-      return mark_availability(channel, date, user, target_user, [])
+    if cmds[0] == 'who' and can_write(channel, user):
+      return availability(channel, date)
+    if cmds[0] == 'no' and (target_user == user or can_write(channel, user)):
+      return mark_availability(channel, date, target_user, [])
+    if cmds[0] in ('vs', '@') and can_write(channel, user):
+      return create_availability(channel, date, cmds)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
