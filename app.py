@@ -392,7 +392,11 @@ def lineup():
     except ValueError:
       return 'Expected a court number (1-6)'
 
-def create_availability():
+def create_availability(channel, date, args):
+  if not date or len(args) != 2:
+    return 'Need date and opponent'
+  
+def delete_availability():
   pass
 
 def mark_availability():
@@ -431,6 +435,8 @@ def available():
       return mark_availability(channel, date, target_user, [])
     if cmds[0] in ('vs', '@') and can_write(channel, user):
       return create_availability(channel, date, cmds)
+    if cmds[0] == 'delete' and can_write(channel, user):
+      return delete_availability(channel, date)
     return mark_availability(channel, date, target_user, ''.join(cmds).split(''))
 
 if __name__ == "__main__":
