@@ -397,17 +397,29 @@ def lineup():
 def available():
     channel = request.form['channel_id']
     user = request.form['user_id']
-    ts = request.form['text'].split()
+    cmds = request.form['text'].split()
+
+    target_user = user
+    (maybe_user, cmds) = (cmds[0] if cmds else None, cmds[1:])
+    if maybe_user:
+      target_user = get_id(maybe_user)
+      if not target_user:
+        target_user = user
+        cmds.insert(0, maybe_user)
+
     date = None
-    (maybe_date, cmds) = (ts[0] if ts else None, ts[1:])
+    (maybe_date, cmds) = (cmds[0] if cmds else None, cmds[1:])
     if maybe_date:
       date = parse_date(maybe_date)
       if not date:
         cmds.insert(0, maybe_date)
+
     if not cmds:
       cmds.append('789')
-    if cmds[0] == 'who' and can_write(channel, user):
-      return availability(channel, date)
+    if cmds[0] == 'who':
+      return availability(channel, date, user)
+    if cmds[0] == 'no':
+      return mark_availability(channel, date, user, target_user, [])
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
