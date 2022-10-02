@@ -486,7 +486,7 @@ def available():
       return mark_availability(channel, date, target_user, [])
     if cmds[0] in ('vs', '@') and can_write(channel, user):
       return create_availability(channel, date, cmds)
-    return mark_availability(channel, date, target_user, ''.join(cmds).split(''))
+    return mark_availability(channel, date, target_user, list(''.join(cmds)))
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
