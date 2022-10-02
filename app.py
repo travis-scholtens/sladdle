@@ -432,11 +432,12 @@ def mark_availability(channel, date, user, hours):
       if user not in value['available'][hour]:
         value['available'][hour].append(user)
     else:
-      value['available'][hour].remove(user)
+      if user in value['available'][hour]:
+        value['available'][hour].remove(user)
   match.reference.update(value)
   return (f'<@{user}> is ' +
       ('*not* ' if not hours else '') +
-      'available for the {date} match at ' +
+      f'available for the {date} match at ' +
       ('home against ' if bool(value['home']) else '') +
       value['opponent'] +
       (f', able to play at {"/".join(sorted(hours))}PM' if hours else ''))
@@ -448,7 +449,7 @@ def availability(channel, date):
   value = match.to_dict()
   if 'available' not in value:
     return f'No availability record for {match.id}'
-  rows = ['Available for the {date} match at ' +
+  rows = [f'Available for the {date} match at ' +
       ('home against ' if bool(value['home']) else '') +
       value['opponent'] + ':']
   for hour in ('7', '8', '9'):
