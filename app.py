@@ -440,8 +440,21 @@ def mark_availability(channel, date, user, hours):
       value['opponent'] +
       (f', able to play at {"/".join(sorted(hours))}PM' if hours else ''))
 
-def availability():
-  pass
+def availability(channel, date):
+  match = by_date(channel, date)
+  if not match:
+    return 'No match ' + (f'on {date}' if date else 'upcoming')
+  value = match.to_dict()
+  if 'available' not in value:
+    return f'No availability record for {match.id}'
+  rows = ['Available for the {date} match at ' +
+      ('home against ' if bool(value['home']) else '') +
+      value['opponent'] + ':']
+  for hour in ('7', '8', '9'):
+    rows.append(
+        f'{hour}PM: ' + 
+        ', '.join([f'<@{user}>' for user in value['available'][hour]]))
+  return '\n'.join(rows)
 
 @app.route("/available", methods=['POST'])
 @slack_sig_auth
