@@ -434,6 +434,14 @@ def mark_availability(channel, date, user, hours):
     else:
       if user in value['available'][hour]:
         value['available'][hour].remove(user)
+  if hours:
+    if user in value['available'].get('no', []):
+      value['available']['no'].remove(user)
+  else:
+    no = value['available'].get('no', [])
+    if user not in no:
+      no.append(user)
+    value['available']['no'] = no
   match.reference.update(value)
   return (f'<@{user}> is ' +
       ('*not* ' if not hours else '') +
@@ -456,6 +464,9 @@ def availability(channel, date):
     rows.append(
         f'{hour}PM: ' + 
         ', '.join([f'<@{user}>' for user in value['available'][hour]]))
+  rows.append(
+        f'No: ' + 
+        ', '.join([f'<@{user}>' for user in value['available'].get('no', [])]))
   return '\n'.join(rows)
 
 @app.route("/available", methods=['POST'])
