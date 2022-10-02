@@ -418,12 +418,27 @@ def create_availability(channel, date, args):
         'home': str(args[0] == 'vs')
     })
   return f'Created availability record for {date}'
-  
-def delete_availability():
-  pass
 
-def mark_availability():
-  pass
+def mark_availability(channel, date, user, hours):
+  match = by_date(channel, date)
+  if not match:
+    return 'No match ' + (f'on {date}' if date else 'upcoming')
+  value = match.to_dict()
+  if 'available' not in value:
+    return f'No availability record for {match.id}'
+  for hour in ('7', '8', '9'):
+    if hour in hours:
+      if user not in value['available'][hour]:
+        value['available'][hour].append(user)
+    else:
+      value['available'][hour].remove(user)
+  match.reference.update(value)
+  return (f'<@{user}> is ' +
+      ('*not* ' if not hours else '') +
+      'available for the {date} match at ' +
+      ('home against ' if bool(value['home']) else '') +
+      value['opponent'] +
+      (f', able to play at {"/".join(sorted(hours))}PM' if hours else ''))
 
 def availability():
   pass
@@ -458,8 +473,6 @@ def available():
       return mark_availability(channel, date, target_user, [])
     if cmds[0] in ('vs', '@') and can_write(channel, user):
       return create_availability(channel, date, cmds)
-    if cmds[0] == 'delete' and can_write(channel, user):
-      return delete_availability(channel, date)
     return mark_availability(channel, date, target_user, ''.join(cmds).split(''))
 
 if __name__ == "__main__":
