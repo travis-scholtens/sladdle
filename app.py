@@ -177,8 +177,11 @@ def create(channel, user, date):
     return f"<@{user}> can't do that"
   if not date:
     return 'Missing date'
-        
-  lineups(channel).document(str(date)).set({
+  
+  doc = lineups(channel).document(str(date))
+  if 'courts' in (doc.get().to_dict() or {}):
+    return f'A lineup for <#{channel}> on {date} already exists'
+  doc.update({
         'play_on_date': str(date),
         'courts': { str(i): [None, None] for i in range(1, 7)}
     })
@@ -395,6 +398,26 @@ def lineup():
 def create_availability(channel, date, args):
   if not date or len(args) != 2:
     return 'Need date and opponent'
+
+  team_doc = (db.collection('rankings')
+                       .document('lipta')
+                       .collection('divisions')
+                       .document('d7')
+                       .collection('teams')
+                       .document(args[1]).get())
+  if not team_doc.exists:
+    return f'No team "{args[1]}"'
+
+  doc = lineups(channel).document(str(date))
+  if 'available' in (doc.get().to_dict() or {}):
+    return f'Availability for <#{channel}> on {date} already exists'
+  doc.update({
+        'play_on_date': str(date),
+        'available': { '7': [], '8': [], '9': []  },
+        'opponent': team_doc.to_dict()['name'],
+        'home': str(args[0] == 'vs')
+    })
+  return f'Created availability record for {date}'
   
 def delete_availability():
   pass
