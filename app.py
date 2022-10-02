@@ -181,7 +181,8 @@ def create(channel, user, date):
   doc = lineups(channel).document(str(date))
   if 'courts' in (doc.get().to_dict() or {}):
     return f'A lineup for <#{channel}> on {date} already exists'
-  doc.update({
+
+  (doc.update if doc.get().exists else doc.set)({
         'play_on_date': str(date),
         'courts': { str(i): [None, None] for i in range(1, 7)}
     })
@@ -411,7 +412,7 @@ def create_availability(channel, date, args):
   doc = lineups(channel).document(str(date))
   if 'available' in (doc.get().to_dict() or {}):
     return f'Availability for <#{channel}> on {date} already exists'
-  doc.update({
+  (doc.update if doc.get().exists else doc.set)({
         'play_on_date': str(date),
         'available': { '7': [], '8': [], '9': []  },
         'opponent': team_doc.to_dict()['name'],
