@@ -240,8 +240,7 @@ def show(channel, date):
   if not_full:
     message = (f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
              + f'still needs players on: {not_full}')
-  else:
-    return display(channel, date, False, message)
+  return display(channel, date, False, message)
 
 
 def by_date(channel, date):
