@@ -1,3 +1,4 @@
+from collections import namedtuple
 import datetime
 from dateutil import parser
 import json
@@ -24,13 +25,24 @@ def event():
     return request.json['challenge']
   return ''
 
-def get_rankings(division, team, rank_type):
+TeamDefinition = namedtuple('', ['league', 'division', 'team'])
+
+def team_definition(channel_id):
+  channel = db.collection('channels').document(channel_id).get()
+  if not channel.exists:
+    return None
+  value = channel.to_dict()
+  if any([field not in value for field in ('league', 'division', 'team')]:
+    return None
+  return TeamDefinition(value['league'], value['division'], value['team'])
+
+def get_rankings(defn, rank_type):
   ratings = (db.collection('rankings')
-       .document('lipta')
+       .document(defn.league)
        .collection('divisions')
-       .document(division)
+       .document(defn.division)
        .collection('teams')
-       .document(team)).get()
+       .document(defn.team)).get()
   if not ratings.exists:
     return None
   data = ratings.to_dict()
@@ -79,23 +91,23 @@ def try_id(name, ids):
 def try_num(f):
   return f'{f:.1f}' if f else '-'
 
-def ranking(division, team, other, rank_type, reverse):
+def ranking(defn, other, rank_type, reverse):
   if team == 'teams':
     return '\n'.join(sorted(
         f'{t.id}: {t.to_dict()["name"]}'
         for t in  db.collection('rankings')
-                       .document('lipta')
+                       .document(defn.league)
                        .collection('divisions')
-                       .document(division)
+                       .document(defn.division)
                        .collection('teams').stream()))
-  (pairs, previous) = get_rankings(division, team, rank_type)
+  (pairs, previous) = get_rankings(defn, rank_type)
   if not pairs:
-    return "Couldn't find ratings for {team}"
+    return "Couldn't find ratings for {defn.team}"
   if other:
     home = {name for (name, _) in pairs}
-    (others, _) = get_rankings(division, other, rank_type)
+    (others, _) = get_rankings(other, rank_type)
     if not others:
-      return "Couldn't find ratings for {other}"
+      return "Couldn't find ratings for {other.team}"
     pairs += others
     previous = []
   else:
@@ -113,30 +125,42 @@ def ranking(division, team, other, rank_type, reverse):
 @slack_sig_auth
 def pti():
   parts = request.form['text'].split()
+  defn = team_definition(request.form['channel_id'])
+  if not defn:
+    return f'No team associated with <@{request.form["channel_id"]}>'
   other = None
   if len(parts) > 1 and parts[-2] == 'vs':
     other = parts.pop()
     parts.pop()
-  division = parts[0] if parts else 'd7'
-  team = parts[-1] if parts else 'pwyc'
+  division = parts[0] if parts else defn.division
+  team = parts[-1] if parts else defn.team
   if team == division:
-    division = 'd7'
-  return ranking(division, team, other, 'pti', False)
+    division = defn.division
+  return ranking(
+      TeamDefinition(defn.league, division, team),
+      TeamDefinition(defn.league, division, other) if other else None,
+      'pti', False)
 
 
 @app.route("/rank", methods=['POST'])
 @slack_sig_auth
 def rank():
   parts = request.form['text'].split()
+  defn = team_definition(request.form['channel_id'])
+  if not defn:
+    return f'No team associated with <@{request.form["channel_id"]}>'
   other = None
   if len(parts) > 1 and parts[-2] == 'vs':
     other = parts.pop()
     parts.pop()
-  division = parts[0] if parts else 'd7'
-  team = parts[-1] if parts else 'pwyc'
+  division = parts[0] if parts else defn.division
+  team = parts[-1] if parts else defn.team
   if team == division:
-    division = 'd7'
-  return ranking(division, team, other, 'divtskill', True)
+    division = defn.division
+  return ranking(
+      TeamDefinition(defn.league, division, team),
+      TeamDefinition(defn.league, division, other) if other else None,
+      'divtskill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
@@ -400,10 +424,13 @@ def create_availability(channel, date, args):
   if not date or len(args) != 2:
     return 'Need date and opponent'
 
+  defn = team_definition(channel)
+  if not defn:
+    return f'No team associated with <@{channel}>'
   team_doc = (db.collection('rankings')
-                       .document('lipta')
+                       .document(defn.league)
                        .collection('divisions')
-                       .document('d7')
+                       .document(defn.division)
                        .collection('teams')
                        .document(args[1]).get())
   if not team_doc.exists:
