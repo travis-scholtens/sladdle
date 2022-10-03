@@ -92,7 +92,7 @@ def try_num(f):
   return f'{f:.1f}' if f else '-'
 
 def ranking(defn, other, rank_type, reverse):
-  if team == 'teams':
+  if defn.team == 'teams':
     return '\n'.join(sorted(
         f'{t.id}: {t.to_dict()["name"]}'
         for t in  db.collection('rankings')
