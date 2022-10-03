@@ -93,7 +93,7 @@ def ranking(division, team, other, rank_type, reverse):
     return "Couldn't find ratings for {team}"
   if other:
     home = {name for (name, _) in pairs}
-    others = get_rankings(division, other, rank_type)
+    (others, _) = get_rankings(division, other, rank_type)
     if not others:
       return "Couldn't find ratings for {other}"
     pairs += others
