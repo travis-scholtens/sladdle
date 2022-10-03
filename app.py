@@ -32,7 +32,7 @@ def team_definition(channel_id):
   if not channel.exists:
     return None
   value = channel.to_dict()
-  if any([field not in value for field in ('league', 'division', 'team')]:
+  if any([field not in value for field in ('league', 'division', 'team')]):
     return None
   return TeamDefinition(value['league'], value['division'], value['team'])
 
