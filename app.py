@@ -493,7 +493,7 @@ def available():
 
     if not cmds:
       cmds.append('789')
-    if cmds[0] == 'who' and can_write(channel, user):
+    if cmds[0] == 'who':
       return availability(channel, date)
     if cmds[0] == 'no' and (target_user == user or can_write(channel, user)):
       return mark_availability(channel, date, target_user, [])
