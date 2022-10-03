@@ -25,7 +25,7 @@ def event():
     return request.json['challenge']
   return ''
 
-TeamDefinition = namedtuple('', ['league', 'division', 'team'])
+TeamDefinition = namedtuple('TeamDefinition', ['league', 'division', 'team'])
 
 def team_definition(channel_id):
   channel = db.collection('channels').document(channel_id).get()
