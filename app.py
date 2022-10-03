@@ -446,7 +446,7 @@ def mark_availability(channel, date, user, hours):
   return (f'<@{user}> is ' +
       ('*not* ' if not hours else '') +
       f'available for the {value["play_on_date"]} match at ' +
-      ('home against ' if bool(value['home']) else '') +
+      ('home against ' if eval(value['home']) else '') +
       value['opponent'] +
       (f', able to play at {"/".join(sorted(hours))}PM' if hours else ''))
 
@@ -458,7 +458,7 @@ def availability(channel, date):
   if 'available' not in value:
     return f'No availability record for {match.id}'
   rows = [f'Available for the {value["play_on_date"]} match at ' +
-      ('home against ' if bool(value['home']) else '') +
+      ('home against ' if eval(value['home']) else '') +
       value['opponent'] + ':']
   for hour in ('7', '8', '9'):
     rows.append(
