@@ -321,7 +321,7 @@ def display(channel, date, in_channel=True, message=None):
   if not lineup:
     return 'There are no upcoming match lineups'
   val = lineup.to_dict()
-  if not any(sum([ps for ps in val['courts'].values()], [])):
+  if not any(sum([ps for ps in val['courts'].values()], [])) and not message:
     return show(channel, date)
   text = f'Lineup for <#{channel}> for match on {val["play_on_date"]}'
   display_date = f'{parser.parse(val["play_on_date"]):%B %d}'
