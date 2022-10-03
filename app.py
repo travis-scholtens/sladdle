@@ -235,12 +235,13 @@ def show(channel, date):
     else:
       return 'There are no upcoming match lineups'
   val = lineup.to_dict()
+  message = None
   not_full = ', '.join([str(c) for c in range (1, 7) if not all(val['courts'][str(c)])])
   if not_full:
-    return (f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
-          + f'still needs players on: {not_full}')
+    message = (f'The match for <#{channel}>, to be played on {val["play_on_date"]}, '
+             + f'still needs players on: {not_full}')
   else:
-    return display(channel, date, False)
+    return display(channel, date, False, message)
 
 
 def by_date(channel, date):
@@ -296,6 +297,12 @@ times = { 7: [2,6],
           8: [1,4],
           9: [3,5] }
 
+court_labels = ' ⓵⓶⓷⓸⓹⓺'
+
+clocks = { 7: '🕖',
+           8: '🕗',
+           9: '🕘' }
+
 def md(text):
   return { 'type': 'mrkdwn', 'text': text }
 
@@ -310,7 +317,7 @@ divider = { 'type': 'divider' }
 def field(text):
   return md(text)
 
-def display(channel, date, in_channel=True):
+def display(channel, date, in_channel=True, message=None):
   lineup = by_date(channel, date)
   if not lineup:
     return 'There are no upcoming match lineups'
@@ -320,7 +327,9 @@ def display(channel, date, in_channel=True):
   text = f'Lineup for <#{channel}> for match on {val["play_on_date"]}'
   display_date = f'{parser.parse(val["play_on_date"]):%B %d}'
   blocks = []
-  blocks.append(section(f'*<#{channel}>* lineup for *{display_date}*'))
+  blocks.append(section(f'*<#{channel}>* lineup for *{display_date}* at '+
+                        ('home against ' if eval(val['home']) else '') +
+                        '*' + val['opponent'] + '*'))
   blocks.append(divider)
   for (t, cs) in times.items():
     fields = []
@@ -328,12 +337,14 @@ def display(channel, date, in_channel=True):
       ps = val['courts'][str(c)]
       if not any(ps):
         continue
-      content = f'{c}: {ps[0]}'
+      content = f'{court_labels[c]}: {ps[0]}'
       if ps[1]:
         content += f'\n     {ps[1]}'
       fields.append(field(content))
     if fields:
-      blocks.append(section(f'*{t}:00*', fields))
+      blocks.append(section(f'{clocks[t]} *{t}:00*', fields))
+  if message:
+    blocks.append(section(message))
   return Response(
       json.dumps({ 'response_type': 'in_channel' if in_channel else 'ephemeral', 
                    'text': text,
