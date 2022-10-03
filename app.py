@@ -494,6 +494,22 @@ def availability(channel, date):
   value = match.to_dict()
   if 'available' not in value:
     return f'No availability record for {match.id}'
+  
+  defn = team_definition(channel)
+  if not defn:
+    return f'No team associated with <@{channel}>'
+  ratings = (db.collection('rankings')
+       .document(defn.league)
+       .collection('divisions')
+       .document(defn.division)
+       .collection('teams')
+       .document(defn.team)).get()
+  if not ratings.exists:
+    return f'No roster for {defn.team}'
+  ids = db.document('slack/names').get().to_dict() or {}
+  ids = ids['ids'] if ids else ids
+  remaining = {ids[name] for name in ratings.to_dict().get('pti', {}) if name in ids}
+  
   rows = [f'Available for the {value["play_on_date"]} match at ' +
       ('home against ' if eval(value['home']) else '') +
       value['opponent'] + ':']
@@ -501,9 +517,15 @@ def availability(channel, date):
     rows.append(
         f'{hour}PM: ' + 
         ', '.join([f'<@{user}>' for user in value['available'][hour]]))
+    remaining -= set(value['available'][hour])
   rows.append(
-        f'No: ' + 
+        'No: ' + 
         ', '.join([f'<@{user}>' for user in value['available'].get('no', [])]))
+  remaining -= set(value['available'].get('no', []))
+  if remaining:
+    rows.append(
+        'Not responded: ' + 
+        ', '.join([f'<@{user}>' for user in remaining]))
   return '\n'.join(rows)
 
 @app.route("/available", methods=['POST'])
