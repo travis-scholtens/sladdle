@@ -291,8 +291,8 @@ def court(channel, user, date, c, names):
     return assigned_msg('now', c, current, val['play_on_date'])
   if len(names) == 1 and names[0] in current:
     for i in range(2):
-      if current[i] == names[0]
-      current[i] = null
+      if current[i] == names[0]:
+        current[i] = null
     lineup.reference.update(val)
     return assigned_msg('now', c, current, val['play_on_date'])
   return assigned_msg('already', c, current, val['play_on_date'])
