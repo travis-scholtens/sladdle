@@ -23,6 +23,7 @@ app.config['SLACK_SIGNING_SECRET'] = None
 def event():
   if request.json and 'challenge' in request.json:
     return request.json['challenge']
+  print(request.json)
   return ''
 
 TeamDefinition = namedtuple('TeamDefinition', ['league', 'division', 'team'])
