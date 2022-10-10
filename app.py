@@ -19,8 +19,17 @@ app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
 client = slack.WebClient(token=os.environ.get('SLACK_TOKEN'))
+
 def ephemeral(text, blocks=None):
   client.chat_postEphemeral(
+      channel=request.form['channel_id'],
+      user=request.form['user_id'],
+      text=text,
+      blocks=blocks)
+  return ''
+
+def post(text, blocks=None):
+  client.chat_postMessage(
       channel=request.form['channel_id'],
       user=request.form['user_id'],
       text=text,
@@ -146,10 +155,11 @@ def pti():
   team = parts[-1] if parts else defn.team
   if team == division:
     division = defn.division
-  return ranking(
-      TeamDefinition(defn.league, division, team),
-      TeamDefinition(defn.league, division, other) if other else None,
-      'pti', False)
+  return ephemeral(
+      ranking(
+          TeamDefinition(defn.league, division, team),
+          TeamDefinition(defn.league, division, other) if other else None,
+          'pti', False))
 
 
 @app.route("/rank", methods=['POST'])
@@ -242,9 +252,9 @@ def show(channel, date):
   lineup = by_date(channel, date)
   if not lineup:
     if date:
-      return f'There is no lineup for a match on {date}'
+      return { 'text': f'There is no lineup for a match on {date}' }
     else:
-      return 'There are no upcoming match lineups'
+      return { 'text': 'There are no upcoming match lineups' }
   val = lineup.to_dict()
   message = None
   not_full = ', '.join([str(c) for c in range (1, 7) if not all(val['courts'][str(c)])])
@@ -361,11 +371,9 @@ def display(channel, date, in_channel=True, message=None):
       blocks.append(section(f'{clocks[t]} *{t}:00*', fields))
   if message:
     blocks.append(section(message))
-  return Response(
-      json.dumps({ 'response_type': 'in_channel' if in_channel else 'ephemeral', 
-                   'text': text,
-                   'blocks': blocks }).replace('\\n', '\n'),
-      mimetype='application/json')
+  return { 'in_channel': in_channel, 
+           'text': text,
+           'blocks': blocks }
 
 id_pattern = re.compile('<@([^|]+)|.*>')
 def get_id(user):
@@ -431,21 +439,23 @@ def lineup():
       if not date:
         cmds.insert(0, maybe_date)
     if not cmds:
-      return(show(channel, date))
+      response = show(channel, date)
+      return post(response['text'], response.get('blocks')) if response.get('in_channel') else ephemeral(response['text'], response.get('blocks')) 
     if cmds == ['new']:
-      return create(channel, request.form['user_id'], date)
+      return ephemeral(create(channel, request.form['user_id'], date))
     if cmds == ['delete']:
-      return delete(channel, request.form['user_id'], date)
+      return ephemeral(delete(channel, request.form['user_id'], date))
     if cmds == ['view']:
-      return display(channel, date)
+      response = display(channel, date)
+      return post(response['text'], response.get('blocks')) if response.get('in_channel') else ephemeral(response['text'], response.get('blocks')) 
     if not date and cmds[0] == 'admin':
-      return admin(channel, request.form['user_id'], cmds[1:])
+      return ephemeral(admin(channel, request.form['user_id'], cmds[1:]))
     if not date and cmds[0] == 'unadmin':
-      return unadmin(channel, request.form['user_id'], cmds[1:])
+      return ephemeral(unadmin(channel, request.form['user_id'], cmds[1:]))
     try:
-      return court(channel, request.form['user_id'], date, int(cmds[0]), cmds[1:])
+      return ephemeral(court(channel, request.form['user_id'], date, int(cmds[0]), cmds[1:]))
     except ValueError:
-      return 'Expected a court number (1-6)'
+      return ephemeral('Expected a court number (1-6)')
 
 def create_availability(channel, date, args):
   if not date or len(args) != 2:
@@ -570,12 +580,12 @@ def available():
     if not cmds:
       cmds.append('789')
     if cmds[0] == 'who':
-      return availability(channel, date)
+      return ephemeral(availability(channel, date))
     if cmds[0] == 'no' and (target_user == user or can_write(channel, user)):
-      return mark_availability(channel, date, target_user, [])
+      return ephemeral(mark_availability(channel, date, target_user, []))
     if cmds[0] in ('vs', '@') and can_write(channel, user):
-      return create_availability(channel, date, cmds)
-    return mark_availability(channel, date, target_user, list(''.join(cmds)))
+      return ephemeral(create_availability(channel, date, cmds))
+    return ephemeral(mark_availability(channel, date, target_user, list(''.join(cmds))))
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
