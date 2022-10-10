@@ -166,7 +166,7 @@ def rank():
       text=ranking(
           TeamDefinition(defn.league, division, team),
           TeamDefinition(defn.league, division, other) if other else None,
-          'divtskill', True)
+          'divtskill', True))
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
