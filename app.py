@@ -161,7 +161,7 @@ def rank():
   if team == division:
     division = defn.division
   client.chat_postEphemeral(
-      channel=request.form['channel_id'],
+      channel=f"<@{request.form['channel_id']}>",
       user=request.form['user_id'],
       text=ranking(
           TeamDefinition(defn.league, division, team),
