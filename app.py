@@ -18,7 +18,7 @@ db = firestore.client()
 app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
-client = slack.WebClient(token=os.env.get('SLACK_TOKEN'))
+client = slack.WebClient(token=os.environ.get('SLACK_TOKEN'))
 
 @app.route("/event", methods=['POST'])
 @slack_sig_auth
