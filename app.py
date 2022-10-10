@@ -19,6 +19,13 @@ app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
 client = slack.WebClient(token=os.environ.get('SLACK_TOKEN'))
+def ephemeral(text, blocks=None):
+  client.chat_postEphemeral(
+      channel=request.form['channel_id'],
+      user=request.form['user_id'],
+      text=text,
+      blocks=blocks)
+  return ''
 
 @app.route("/event", methods=['POST'])
 @slack_sig_auth
@@ -160,10 +167,8 @@ def rank():
   team = parts[-1] if parts else defn.team
   if team == division:
     division = defn.division
-  client.chat_postEphemeral(
-      channel=request.form['channel_id'],
-      user=request.form['user_id'],
-      text=ranking(
+  return ephemeral(
+      ranking(
           TeamDefinition(defn.league, division, team),
           TeamDefinition(defn.league, division, other) if other else None,
           'divtskill', True))
