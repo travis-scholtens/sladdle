@@ -4,6 +4,7 @@ from dateutil import parser
 import json
 import os
 import re
+import slack
 
 from flask import Flask, request, Response
 from flask_slacksigauth import slack_sig_auth
@@ -17,6 +18,7 @@ db = firestore.client()
 app = Flask(__name__)
 app.config['SLACK_SIGNING_SECRET'] = None
 
+client = slack.WebClient(token=os.env.get('SLACK_TOKEN'))
 
 @app.route("/event", methods=['POST'])
 @slack_sig_auth
@@ -158,10 +160,13 @@ def rank():
   team = parts[-1] if parts else defn.team
   if team == division:
     division = defn.division
-  return ranking(
-      TeamDefinition(defn.league, division, team),
-      TeamDefinition(defn.league, division, other) if other else None,
-      'divtskill', True)
+  client.chat_postEphemeral(
+      channel=request.form['channel_id'],
+      user=request.form['user_id'],
+      text=ranking(
+          TeamDefinition(defn.league, division, team),
+          TeamDefinition(defn.league, division, other) if other else None,
+          'divtskill', True)
 
 def can_write(channel, user):
   doc = db.collection('channels').document(channel).get()
