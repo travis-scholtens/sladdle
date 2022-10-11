@@ -457,6 +457,38 @@ def lineup():
     except ValueError:
       return ephemeral('Expected a court number (1-6)')
 
+
+def show_score(date, cmds):
+  if not can_write(request.form['channel_id'], request.form['user_id']):
+    return f"<@{request.form['user_id']}> can't do that"
+  lineup = by_date(channel, date)
+  if not lineup:
+    return 'No match ' + (f'on {date}' if date else 'upcoming')
+  val = lineup.to_dict()
+  m = re.match('([1-6]) ([WwLl])(?: ([-1-6]*))?', ' '.join(cmds))
+  if not m:
+    return 'Expected: /score (1-6) (W|L) [set results]'
+  ps = [p for p in val['courts'][m[1]] if p]
+  outcome = 'won' if m[2] in 'Ww' else 'lost'
+  result = m.group(3)
+  message = f'<@{p[0]}> and <@{p[1]}>' if ps else 'We'
+  message += f' {outcome} on court {m[1]}'
+  if result:
+    message += f', {result}'
+  return ephemeral(message)
+
+@app.route("/score", methods=['POST'])
+@slack_sig_auth
+def score():
+    ts = request.form['text'].split()
+    date = None
+    (maybe_date, cmds) = (ts[0] if ts else None, ts[1:])
+    if maybe_date:
+      date = parse_date(maybe_date)
+      if not date:
+        cmds.insert(0, maybe_date)
+    return show_score(date, cmds)
+
 def create_availability(channel, date, args):
   if not date or len(args) != 2:
     return 'Need date and opponent'
