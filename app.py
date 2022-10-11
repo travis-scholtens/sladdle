@@ -465,7 +465,7 @@ def show_score(date, cmds):
   if not lineup:
     return 'No match ' + (f'on {date}' if date else 'upcoming')
   val = lineup.to_dict()
-  m = re.match('([1-6]) ([WwLl])(?: ([-1-6 ]*))?', ' '.join(cmds))
+  m = re.match('([1-6]) ([WwLl])(?: ([-0-7 ]*))?', ' '.join(cmds))
   if not m:
     return 'Expected: /score (1-6) (W|L) [set results]'
   ps = [p for p in val['courts'][m[1]] if p]
@@ -475,7 +475,7 @@ def show_score(date, cmds):
   message += f' {outcome} on court {m[1]}'
   if result:
     message += f', {result}'
-  return ephemeral(message)
+  return post(message)
 
 @app.route("/score", methods=['POST'])
 @slack_sig_auth
