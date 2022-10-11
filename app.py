@@ -461,7 +461,7 @@ def lineup():
 def show_score(date, cmds):
   if not can_write(request.form['channel_id'], request.form['user_id']):
     return f"<@{request.form['user_id']}> can't do that"
-  lineup = by_date(channel, date)
+  lineup = by_date(request.form['channel_id'], date)
   if not lineup:
     return 'No match ' + (f'on {date}' if date else 'upcoming')
   val = lineup.to_dict()
