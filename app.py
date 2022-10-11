@@ -471,7 +471,7 @@ def show_score(date, cmds):
   ps = [p for p in val['courts'][m[1]] if p]
   outcome = 'won' if m[2] in 'Ww' else 'lost'
   result = m.group(3)
-  message = f'{ps[0]} and {ps[1]}' if ps else 'We'
+  message = f'{ps[0]} and {ps[1]}' if len(ps) == 2 else 'We'
   message += f' {outcome} on court {m[1]}'
   if result:
     message += f', {result}'
