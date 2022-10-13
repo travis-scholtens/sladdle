@@ -264,7 +264,7 @@ def show(channel, date):
   return display(channel, date, False, message)
 
 
-def by_date(channel, date):
+def by_date(channel, date, include_yesterday=False):
   if date:
     by_play = lineups(channel).where('play_on_date', '==', str(date)).get()
     for lineup in by_play:
@@ -273,8 +273,11 @@ def by_date(channel, date):
     if by_id.exists:
       return by_id
     return None
+  first_day = datetime.date.today()
+  if include_yesterday:
+    first_day -= datetime.timedelta(days=1)
   next_match = (lineups(channel)
-                   .where('play_on_date', '>=', str(datetime.date.today()))
+                   .where('play_on_date', '>=', str(first_day))
                    .order_by('play_on_date')
                    .limit(1)).get()
   for lineup in next_match:
@@ -461,7 +464,7 @@ def lineup():
 def show_score(date, cmds):
   if not can_write(request.form['channel_id'], request.form['user_id']):
     return f"<@{request.form['user_id']}> can't do that"
-  lineup = by_date(request.form['channel_id'], date)
+  lineup = by_date(request.form['channel_id'], date, True)
   if not lineup:
     return 'No match ' + (f'on {date}' if date else 'upcoming')
   val = lineup.to_dict()
