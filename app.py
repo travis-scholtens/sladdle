@@ -208,8 +208,9 @@ def parse_date(d):
     return datetime.date.today() + datetime.timedelta(days=1)
   try:
     date = parser.parse(d).date()
-    if date.month <= 6 and date.year == datetime.date.today().year:
-      return date + datetime.timedelta(years=1)
+    today = datetime.date.today()
+    if date.month <= 6 < today.month and date.year == today.year:
+      return date + datetime.date(date.year + 1, date.month, date.day)
     return date
   except parser.ParserError:
     return None
