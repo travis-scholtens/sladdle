@@ -665,7 +665,7 @@ def tourney():
             divider] + [
             section(match) for match in next_matches] + [
             divider,
-            section('<https://challonge.com/zimrjq8b|Full bracket>')
+            section('<https://challonge.com/zimrjq8b|Full bracket>')]
   return ephemeral(f'{played} matches played in the D7 tournament', blocks)
 
 if __name__ == "__main__":
