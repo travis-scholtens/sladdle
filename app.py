@@ -1,3 +1,4 @@
+import challonge
 from collections import namedtuple
 import datetime
 from dateutil import parser
@@ -622,6 +623,50 @@ def available():
     if cmds[0] in ('vs', '@') and can_write(channel, user):
       return ephemeral(create_availability(channel, date, cmds))
     return ephemeral(mark_availability(channel, date, target_user, list(''.join(cmds))))
+
+def match_result(match):
+  scores = match['scores_csv'].split(',')
+  if match['winner_id'] == match['player2_id']:
+    scores = ['-'.join(reversed(score.split('-'))) for score in scores]
+  return f'{ranked(match["winner_id"])} beat {ranked(match["loser_id"])}, {", ".join(scores)}'
+  
+@app.route('/tourney', methods=['POST'])
+@slack_sig_auth
+def tourney():
+  channel = request.form['channel_id']
+  user = request.form['user_id']
+  show = request.form['text'] == 'show' and can_write(channel, user)
+  
+  challonge.set_credentials('travis_scholtens', os.environ.get('CHALLONGE_API_KEY'))
+  (teams, matches) = [
+    {item['id']: item for item in data.index('zimrjq8b')}
+    for data in (challonge.participants, challonge.matches)
+  ]
+  
+  played = len(match for match in matches.values() if match['state'] == 'complete')
+ 
+  sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
+  last_complete = {id: None for id in teams}
+  for id in sequence:
+    if matches[id]['state'] == 'complete':
+      for player in ('player1', 'player2'):
+        last_complete[matches[id][f'{player}_id']] = id
+  recent_results = [match_result(matches[id]) for id in sequence if id in last_complete.values()]
+  
+  next_matches = [f'{name(matches[id]["player1_id"])} vs. {name(matches[id]["player2_id"])}'
+                  for id in sequence if matches[id]['state'] == 'open']
+
+  blocks = [section('*D7 Tournament, "March Padness"*'),
+            section('Recent'),
+            divider] + [
+            section(result) for result in recent_results] + [
+            divider,
+            section('Next to play'),
+            divider] + [
+            section(match) for match in next_matches] + [
+            divider,
+            section('<https://challonge.com/zimrjq8b|Full bracket>')
+  return ephemeral(f'{played} matches played in the D7 tournament', blocks)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
