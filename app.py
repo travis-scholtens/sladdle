@@ -643,7 +643,7 @@ def tourney():
     for data in (challonge.participants, challonge.matches)
   ]
   
-  played = len(match for match in matches.values() if match['state'] == 'complete')
+  played = len([match for match in matches.values() if match['state'] == 'complete'])
  
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
   last_complete = {id: None for id in teams}
