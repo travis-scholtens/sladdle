@@ -652,7 +652,7 @@ def tourney():
 
   def match_result(match):
     scores = [s.split('-') for s in match['scores_csv'].split(',')]
-    by_team = [[scores[j][i] for j in range(len(scores))])
+    by_team = ['     '.join([scores[j][i] for j in range(len(scores))])
                for i in range(len(scores[0]))]
     teams = []
     for i in range(2):
