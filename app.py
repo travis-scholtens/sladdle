@@ -624,11 +624,6 @@ def available():
       return ephemeral(create_availability(channel, date, cmds))
     return ephemeral(mark_availability(channel, date, target_user, list(''.join(cmds))))
 
-def match_result(match):
-  scores = match['scores_csv'].split(',')
-  if match['winner_id'] == match['player2_id']:
-    scores = ['-'.join(reversed(score.split('-'))) for score in scores]
-  return f'{ranked(match["winner_id"])} beat {ranked(match["loser_id"])}, {", ".join(scores)}'
   
 @app.route('/tourney', methods=['POST'])
 @slack_sig_auth
@@ -644,7 +639,23 @@ def tourney():
   ]
   
   played = len([match for match in matches.values() if match['state'] == 'complete'])
- 
+  
+  records = {id: [0, 0] for id in teams}
+  for match in matches.values():
+    if match['state'] == 'complete':
+      records[match['winner_id']][0] += 1
+      records[match['loser_id']][1] += 1
+
+  ranked = lambda id: f'{name(id)} ({records[id][0]}-{records[id][1]})'
+
+  name = lambda id: teams[id]["name"].replace('\t', ' ')
+
+  def match_result(match):
+    scores = match['scores_csv'].split(',')
+    if match['winner_id'] == match['player2_id']:
+      scores = ['-'.join(reversed(score.split('-'))) for score in scores]
+    return f'{ranked(match["winner_id"])} beat {ranked(match["loser_id"])}, {", ".join(scores)}'
+
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
   last_complete = {id: None for id in teams}
   for id in sequence:
