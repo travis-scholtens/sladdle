@@ -702,7 +702,8 @@ def tourney():
             section(match) for match in next_matches] + [
             divider,
             section('<https://challonge.com/zimrjq8b|Full bracket>')]
-  return ephemeral(f'{played} matches played in the D7 tournament', blocks)
+  method = post if show else ephemeral
+  return method(f'{played} matches played in the D7 tournament', blocks)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
