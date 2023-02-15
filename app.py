@@ -646,18 +646,19 @@ def tourney():
       records[match['winner_id']][0] += 1
       records[match['loser_id']][1] += 1
 
-  ranked = lambda id: name(id) + f' ({records[id][0]}-{records[id][1]})' if sum(records[id]) else ''
-
   name = lambda id: teams[id]["name"].replace('\t', ' ')
 
+  ranked = lambda id: name(id) + (
+      f' ({records[id][0]}-{records[id][1]})' if sum(records[id]) else '')
+  
   def match_result(match):
     scores = [s.split('-') for s in match['scores_csv'].split(',')]
-    by_team = ['     '.join([scores[j][i] for j in range(len(scores))])
+    by_team = ['   '.join([scores[j][i] for j in range(len(scores))])
                for i in range(len(scores[0]))]
     teams = []
     for i in range(2):
       prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ' '
-      teams.append('     '.join([prefix, name(match[f'player{i+1}_id']), by_team[i]]))
+      teams.append('   '.join([prefix, name(match[f'player{i+1}_id']), by_team[i]]))
     return [
         field('\n'.join(teams))
     ]
