@@ -660,7 +660,7 @@ def tourney():
       prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ' '
       teams.append('   '.join([prefix, name(match[f'player{i+1}_id']), by_team[i]]))
     return [
-        field('\n'.join(teams))
+        field('\n'.join(teams if match['winner_id'] == match['player1_id'] else reversed(teams)))
     ]
  
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
