@@ -692,13 +692,12 @@ def tourney():
   next_matches = [f'{ranked(matches[id]["player1_id"])} vs. {ranked(matches[id]["player2_id"])}'
                   for id in sequence if matches[id]['state'] == 'open']
 
-  blocks = [section('*Recent results*'),
-            divider,
+  blocks = ([section('*D7 Team Tournament*'), divider] if show else []) + [
+            section('*Recent results*'),
             { 'type': 'section',
               'fields': recent_results },
             divider,
-            section('*Next to play*'),
-            divider] + [
+            section('*Next to play*')] + [
             section(match) for match in next_matches] + [
             divider,
             section('<https://challonge.com/zimrjq8b|Full bracket>')]
