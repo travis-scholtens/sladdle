@@ -34,7 +34,8 @@ def post(text, blocks=None):
       channel=request.form['channel_id'],
       user=request.form['user_id'],
       text=text,
-      blocks=blocks)
+      blocks=blocks,
+      unfurl_links=False)
   return ''
 
 @app.route("/event", methods=['POST'])
