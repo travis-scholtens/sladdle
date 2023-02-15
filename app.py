@@ -652,15 +652,20 @@ def tourney():
       f' ({records[id][0]}-{records[id][1]})' if sum(records[id]) else '')
   
   def match_result(match):
+    reverse = match['winner_id'] == match['player2_id']
     scores = [s.split('-') for s in match['scores_csv'].split(',')]
     by_team = ['   '.join([scores[j][i] for j in range(len(scores))])
                for i in range(len(scores[0]))]
     teams = []
     for i in range(2):
-      prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ' '
-      teams.append('   '.join([prefix, name(match[f'player{i+1}_id']), by_team[i]]))
+      prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ''
+      teams.append('   '.join([prefix, name(match[f'player{i+1}_id'])]))
+    if reverse:
+      teams = reversed(teams) 
+    teams.append('   '.join(['–'.join(reversed(s) if reverse else s)
+                             for s in scores]))
     return [
-        field('\n'.join(teams if match['winner_id'] == match['player1_id'] else reversed(teams)))
+        field('\n    '.join(teams))
     ]
  
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
