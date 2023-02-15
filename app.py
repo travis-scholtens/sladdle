@@ -646,21 +646,20 @@ def tourney():
       records[match['winner_id']][0] += 1
       records[match['loser_id']][1] += 1
 
-  ranked = lambda id: f'{name(id)} ({records[id][0]}-{records[id][1]})'
+  ranked = lambda id: name(id) + f' ({records[id][0]}-{records[id][1]})' if sum(records[id]) else ''
 
   name = lambda id: teams[id]["name"].replace('\t', ' ')
 
   def match_result(match):
     scores = [s.split('-') for s in match['scores_csv'].split(',')]
-    by_team = ['     '.join([scores[j][i] for j in range(len(scores))])
+    by_team = [[scores[j][i] for j in range(len(scores))])
                for i in range(len(scores[0]))]
     teams = []
-    for player in ('player1', 'player2'):
-      prefix = '✓' if match['winner_id'] == match[f'{player}_id'] else '     '
-      teams.append(prefix + ' ' + ranked(match[f'{player}_id']))
+    for i in range(2):
+      prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ' '
+      teams.append('     '.join([prefix, name(match[f'player{i+1}_id']), by_team[i]]))
     return [
-        field('\n'.join(teams)),
-        field('\n'.join(by_team))
+        field('\n'.join(teams))
     ]
  
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
@@ -673,7 +672,7 @@ def tourney():
       [match_result(matches[id]) for id in sequence if id in last_complete.values()],
       [])
   
-  next_matches = [f'{name(matches[id]["player1_id"])} vs. {name(matches[id]["player2_id"])}'
+  next_matches = [f'{ranked(matches[id]["player1_id"])} vs. {ranked(matches[id]["player2_id"])}'
                   for id in sequence if matches[id]['state'] == 'open']
 
   blocks = [section('*Recent results*'),
