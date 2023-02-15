@@ -674,8 +674,19 @@ def tourney():
     if matches[id]['state'] == 'complete':
       for player in ('player1', 'player2'):
         last_complete[matches[id][f'{player}_id']] = id
+  latest = set(last_complete.values())
+  recent = set()
+  players_seen = set()
+  for id in reversed(sequence):
+    if id not in latest:
+      continue
+    players = {matches[id]['player1_id'], matches[id]['player2_id']}
+    if players & players_seen:
+      continue
+    recent.add(id)
+    players_seen |= players
   recent_results = sum(
-      [match_result(matches[id]) for id in sequence if id in last_complete.values()],
+      [match_result(matches[id]) for id in sequence if id in recent],
       [])
   
   next_matches = [f'{ranked(matches[id]["player1_id"])} vs. {ranked(matches[id]["player2_id"])}'
