@@ -667,12 +667,11 @@ def tourney():
   next_matches = [f'{name(matches[id]["player1_id"])} vs. {name(matches[id]["player2_id"])}'
                   for id in sequence if matches[id]['state'] == 'open']
 
-  blocks = [section('*D7 Tournament, "March Padness"*'),
-            section('Recent'),
+  blocks = [section('*Recent results*'),
             divider] + [
             section(result) for result in recent_results] + [
             divider,
-            section('Next to play'),
+            section('*Next to play*'),
             divider] + [
             section(match) for match in next_matches] + [
             divider,
