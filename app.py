@@ -651,25 +651,35 @@ def tourney():
   name = lambda id: teams[id]["name"].replace('\t', ' ')
 
   def match_result(match):
-    scores = match['scores_csv'].split(',')
-    if match['winner_id'] == match['player2_id']:
-      scores = ['-'.join(reversed(score.split('-'))) for score in scores]
-    return f'{ranked(match["winner_id"])} beat {ranked(match["loser_id"])}, {", ".join(scores)}'
-
+    scores = [s.split('-') for s in match['scores_csv'].split(',')]
+    by_team = [' '.join([scores[j][i] for j in range(len(scores))])
+               for i in range(len(scores[0]))]
+    teams = []
+    for player in ('player1', 'player2'):
+      prefix = '✓' if match['winner_id'] == match[f'{player}_id'] else ' '
+      teams.append(prefix + ' ' + ranked(match[f'{player}_id']))
+    return [
+        field('\n'.join(teams)),
+        field('\n'.join(by_team))
+    ]
+ 
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
   last_complete = {id: None for id in teams}
   for id in sequence:
     if matches[id]['state'] == 'complete':
       for player in ('player1', 'player2'):
         last_complete[matches[id][f'{player}_id']] = id
-  recent_results = [match_result(matches[id]) for id in sequence if id in last_complete.values()]
+  recent_results = sum(
+      [match_result(matches[id]) for id in sequence if id in last_complete.values()],
+      [])
   
   next_matches = [f'{name(matches[id]["player1_id"])} vs. {name(matches[id]["player2_id"])}'
                   for id in sequence if matches[id]['state'] == 'open']
 
   blocks = [section('*Recent results*'),
-            divider] + [
-            section(result) for result in recent_results] + [
+            divider,
+            { 'type': 'section',
+              'fields': recent_results },
             divider,
             section('*Next to play*'),
             divider] + [
