@@ -661,7 +661,7 @@ def tourney():
       prefix = '✓' if match['winner_id'] == match[f'player{i+1}_id'] else ''
       teams.append('   '.join([prefix, name(match[f'player{i+1}_id'])]))
     if reverse:
-      teams = reversed(teams) 
+      teams = list(reversed(teams))
     teams.append('   '.join(['–'.join(reversed(s) if reverse else s)
                              for s in scores]))
     return [
