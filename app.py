@@ -662,10 +662,10 @@ def tourney():
       teams.append('   '.join([prefix, name(match[f'player{i+1}_id'])]))
     if reverse:
       teams = list(reversed(teams))
-    teams.append('   '.join(['–'.join(reversed(s) if reverse else s)
+    teams.append('   '.join([''] + ['–'.join(reversed(s) if reverse else s)
                              for s in scores]))
     return [
-        field('\n    '.join(teams))
+        field('\n   '.join(teams))
     ]
  
   sequence = sorted(matches, key=lambda id: abs(matches[id]['round']))
