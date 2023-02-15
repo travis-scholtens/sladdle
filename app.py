@@ -652,11 +652,11 @@ def tourney():
 
   def match_result(match):
     scores = [s.split('-') for s in match['scores_csv'].split(',')]
-    by_team = [' '.join([scores[j][i] for j in range(len(scores))])
+    by_team = ['     '.join([scores[j][i] for j in range(len(scores))])
                for i in range(len(scores[0]))]
     teams = []
     for player in ('player1', 'player2'):
-      prefix = '✓' if match['winner_id'] == match[f'{player}_id'] else ' '
+      prefix = '✓' if match['winner_id'] == match[f'{player}_id'] else '     '
       teams.append(prefix + ' ' + ranked(match[f'{player}_id']))
     return [
         field('\n'.join(teams)),
